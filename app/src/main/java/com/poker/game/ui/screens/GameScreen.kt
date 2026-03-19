@@ -37,18 +37,12 @@ fun GameScreen(
         }
     }
     
-    // Portrait mode layout - vertical scrolling
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFF35654d))
+        modifier = modifier.fillMaxSize().background(Color(0xFF35654d))
     ) {
         // Header
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF2a503d))
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().background(Color(0xFF2a503d)).padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -56,15 +50,12 @@ fun GameScreen(
             Text(text = "Round ${gameState.gameRound}", color = Color.White, fontSize = 14.sp)
         }
         
-        // Center - Pot and Community Cards
+        // Center
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(8.dp),
+            modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // AI Players - horizontal scroll
+            // AI Players
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -79,9 +70,7 @@ fun GameScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Pot
             PotDisplay(pot = gameState.pot)
-            
             Spacer(modifier = Modifier.height(8.dp))
             
             // Community Cards
@@ -95,7 +84,6 @@ fun GameScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Stage
             Text(
                 text = when (gameState.currentStage) {
                     GameStage.PREFLOP -> "Pre-flop"
@@ -108,7 +96,6 @@ fun GameScreen(
                 fontSize = 14.sp
             )
             
-            // Message
             if (gameState.message.isNotEmpty()) {
                 Text(
                     text = gameState.message,
@@ -119,7 +106,6 @@ fun GameScreen(
                 )
             }
             
-            // Continue button
             if (showContinueButton && gameState.winner != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 ActionButton(
@@ -135,19 +121,11 @@ fun GameScreen(
         
         // Bottom - Human Player + Buttons
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF2a503d))
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().background(Color(0xFF2a503d)).padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Human player info
             humanPlayer?.let { player ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Cards
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         player.hand.forEach { card ->
                             CardView(card = card, width = 45.dp, height = 65.dp)
@@ -167,7 +145,6 @@ fun GameScreen(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Action buttons - big and easy to tap
             if (isHumanTurn && !showContinueButton) {
                 val maxBet = gameState.players.filter { it.status == PlayerStatus.ACTIVE || it.status == PlayerStatus.ALL_IN }.maxOfOrNull { it.currentBet } ?: 0
                 val toCall = maxBet - (humanPlayer?.currentBet ?: 0)
@@ -185,11 +162,7 @@ fun GameScreen(
                     playerChips = humanPlayer?.chips ?: 0
                 )
             } else if (!showContinueButton) {
-                Text(
-                    text = "Waiting...",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+                Text(text = "Waiting...", color = Color.Gray, fontSize = 14.sp)
             }
         }
     }
@@ -202,12 +175,10 @@ private fun CompactPlayerPanel(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .background(
-                if (isCurrentPlayer) Color(0x40FFD700) else Color(0x60000000),
-                RoundedCornerShape(4.dp)
-            )
-            .padding(4.dp)
+        modifier = Modifier.background(
+            if (isCurrentPlayer) Color(0x40FFD700) else Color(0x60000000),
+            RoundedCornerShape(4.dp)
+        ).padding(4.dp)
     ) {
         Row {
             if (player.isDealer) Text("D ", color = Color.White, fontSize = 8.sp)
@@ -219,13 +190,11 @@ private fun CompactPlayerPanel(
         if (player.currentBet > 0) {
             Text(text = "$${player.currentBet}", color = Color.Yellow, fontSize = 8.sp)
         }
-        // Hidden cards
+        // Hidden cards - use Box with preferred size
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             repeat(2) {
                 Box(
-                    modifier = Modifier
-                        .size(20.dp, 28.dp)
-                        .background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
+                    modifier = Modifier.preferredSize(20.dp, 28.dp).background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
                 )
             }
         }
@@ -233,13 +202,4 @@ private fun CompactPlayerPanel(
             Text("Fold", color = Color.Red, fontSize = 8.sp)
         }
     }
-}
-
-@Composable
-private fun Modifier.size(width: Int, height: Int): Modifier {
-    return this.then(Modifier.requiredSize(width.dp, height.dp))
-}
-
-private fun Modifier.requiredSize(width: Int, height: Int): Modifier {
-    return this.then(androidx.compose.foundation.layout.size(width.dp, height.dp))
 }
