@@ -19,9 +19,6 @@ import com.poker.game.models.PlayerStatus
 import com.poker.game.models.PlayerType
 import com.poker.game.ui.components.*
 
-/**
- * 游戏主界面
- */
 @Composable
 fun GameScreen(
     controller: GameController,
@@ -54,10 +51,8 @@ fun GameScreen(
             return@Box
         }
         
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // ===== 顶部：返回按钮和回合信息 =====
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -66,36 +61,26 @@ fun GameScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "← 返回",
-                    color = Color.Gray,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(8.dp)
-                )
-                Text(
-                    text = "第 ${gameState.gameRound} 手",
-                    color = Color.Yellow,
-                    fontSize = 14.sp
-                )
+                Text(text = "< Back", color = Color.Gray, fontSize = 14.sp)
+                Text(text = "Round ${gameState.gameRound}", color = Color.Yellow, fontSize = 14.sp)
             }
             
-            // ===== AI 玩家 - 紧凑布局 =====
+            // AI Players - compact row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    .padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 gameState.players.filter { it.type == PlayerType.AI }.forEach { player ->
                     CompactPlayerPanel(
                         player = player,
-                        isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player),
-                        showCards = gameState.currentStage == GameStage.SHOWDOWN
+                        isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player)
                     )
                 }
             }
             
-            // ===== 中间：公共牌和底池 =====
+            // Center - Pot and Cards
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -104,10 +89,8 @@ fun GameScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 PotDisplay(pot = gameState.pot)
-                
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 公共牌
                 if (gameState.communityCards.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         gameState.communityCards.forEach { card ->
@@ -118,20 +101,18 @@ fun GameScreen(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 阶段
                 Text(
                     text = when (gameState.currentStage) {
-                        GameStage.PREFLOP -> "翻牌前"
-                        GameStage.FLOP -> "翻牌"
-                        GameStage.TURN -> "转牌"
-                        GameStage.RIVER -> "河牌"
-                        GameStage.SHOWDOWN -> "摊牌"
+                        GameStage.PREFLOP -> "Pre-flop"
+                        GameStage.FLOP -> "Flop"
+                        GameStage.TURN -> "Turn"
+                        GameStage.RIVER -> "River"
+                        GameStage.SHOWDOWN -> "Showdown"
                     },
                     color = Color(0xFFCCCCCC),
                     fontSize = 14.sp
                 )
                 
-                // 消息
                 if (gameState.message.isNotEmpty()) {
                     Text(
                         text = gameState.message,
@@ -142,11 +123,10 @@ fun GameScreen(
                     )
                 }
                 
-                // 继续按钮
                 if (showContinueButton && gameState.winner != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     ActionButton(
-                        text = "继续下一局",
+                        text = "Continue",
                         onClick = {
                             showContinueButton = false
                             controller.startNewHand()
@@ -156,7 +136,7 @@ fun GameScreen(
                 }
             }
             
-            // ===== 底部：人类玩家 + 按钮 =====
+            // Bottom - Human Player + Buttons
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -164,13 +144,8 @@ fun GameScreen(
                     .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 玩家信息
                 humanPlayer?.let { player ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // 手牌
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             player.hand.forEach { card ->
                                 CardView(card = card, width = 40.dp, height = 56.dp)
@@ -178,23 +153,19 @@ fun GameScreen(
                         }
                         Column {
                             Text(
-                                text = "你",
+                                text = "You",
                                 color = if (isHumanTurn) Color.Yellow else Color.White,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(
-                                text = "$${player.chips}",
-                                color = Color.Green,
-                                fontSize = 14.sp
-                            )
+                            Text(text = "$${player.chips}", color = Color.Green, fontSize = 14.sp)
                         }
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // 动作按钮区域 - 保证显示
+                // Action buttons
                 if (isHumanTurn && !showContinueButton) {
                     val maxBet = gameState.players.filter { it.status == PlayerStatus.ACTIVE || it.status == PlayerStatus.ALL_IN }.maxOfOrNull { it.currentBet } ?: 0
                     val toCall = maxBet - (humanPlayer?.currentBet ?: 0)
@@ -213,7 +184,7 @@ fun GameScreen(
                     )
                 } else if (!showContinueButton) {
                     Text(
-                        text = if (gameState.getCurrentPlayer()?.type == PlayerType.AI) "等待电脑行动..." else "游戏进行中",
+                        text = if (gameState.getCurrentPlayer()?.type == PlayerType.AI) "Waiting for AI..." else "Game in progress",
                         color = Color.Gray,
                         fontSize = 12.sp
                     )
@@ -223,14 +194,10 @@ fun GameScreen(
     }
 }
 
-/**
- * 紧凑的玩家面板
- */
 @Composable
 private fun CompactPlayerPanel(
     player: com.poker.game.models.Player,
-    isCurrentPlayer: Boolean,
-    showCards: Boolean
+    isCurrentPlayer: Boolean
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -246,51 +213,25 @@ private fun CompactPlayerPanel(
             if (player.isSmallBlind) Text("SB ", color = Color.Cyan, fontSize = 8.sp)
             if (player.isBigBlind) Text("BB ", color = Color.Yellow, fontSize = 8.sp)
         }
-        Text(
-            text = player.name,
-            color = Color.White,
-            fontSize = 10.sp
-        )
-        Text(
-            text = "$${player.chips}",
-            color = Color.Green,
-            fontSize = 9.sp
-        )
+        Text(text = player.name, color = Color.White, fontSize = 10.sp)
+        Text(text = "$${player.chips}", color = Color.Green, fontSize = 9.sp)
         if (player.currentBet > 0) {
-            Text(
-                text = "$${player.currentBet}",
-                color = Color.Yellow,
-                fontSize = 8.sp
-            )
+            Text(text = "$${player.currentBet}", color = Color.Yellow, fontSize = 8.sp)
         }
-        // 隐藏的手牌
+        // Hidden cards
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             repeat(2) {
                 Box(
-                    modifier = Modifier
-                        .size(24.dp, 34.dp)
-                        .background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
+                    modifier = Modifier.size(24.dp, 34.dp).background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
                 )
             }
         }
-        if (player.status == com.poker.game.models.PlayerStatus.FOLDED) {
-            Text("弃牌", color = Color.Red, fontSize = 8.sp)
+        if (player.status == PlayerStatus.FOLDED) {
+            Text("Fold", color = Color.Red, fontSize = 8.sp)
         }
     }
 }
 
-@Composable
-private fun Modifier.size(width: Int, height: Int): Modifier {
-    return this.then(Modifier.requiredSize(width.dp, height.dp))
-}
-
-private fun Modifier.requiredSize(width: Int, height: Int): Modifier {
-    return this.then(androidx.compose.foundation.layout.size(width.dp, height.dp))
-}
-
-/**
- * 游戏结束画面
- */
 @Composable
 private fun GameOverScreen(
     winner: String,
@@ -305,22 +246,9 @@ private fun GameOverScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(
-                text = "游戏结束",
-                color = Color.Yellow,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "🏆 $winner 获胜！",
-                color = Color.White,
-                fontSize = 22.sp
-            )
-            ActionButton(
-                text = "返回主菜单",
-                onClick = onRestart,
-                backgroundColor = Color(0xFF4a90d9)
-            )
+            Text(text = "Game Over", color = Color.Yellow, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Winner: $winner", color = Color.White, fontSize = 22.sp)
+            ActionButton(text = "Back to Menu", onClick = onRestart, backgroundColor = Color(0xFF4a90d9))
         }
     }
 }
