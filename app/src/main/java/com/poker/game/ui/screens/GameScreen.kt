@@ -194,7 +194,7 @@ private fun CompactPlayerPanel(
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             repeat(2) {
                 Box(
-                    modifier = Modifier.preferredSize(20.dp, 28.dp).background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
+                    modifier = Modifier.size(20.dp, 28.dp).background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
                 )
             }
         }
