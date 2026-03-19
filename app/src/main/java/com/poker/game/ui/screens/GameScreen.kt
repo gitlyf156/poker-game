@@ -9,12 +9,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.poker.game.game.GameController
 import com.poker.game.models.GameStage
 import com.poker.game.models.PlayerAction
 import com.poker.game.models.PlayerStatus
+import com.poker.game.models.PlayerType
 import com.poker.game.ui.components.*
 
 /**
@@ -28,11 +30,10 @@ fun GameScreen(
 ) {
     val gameState = controller.gameState
     val humanPlayer = gameState.players.firstOrNull()
-    val isHumanTurn = gameState.getCurrentPlayer()?.type == com.poker.game.models.PlayerType.HUMAN
+    val isHumanTurn = gameState.getCurrentPlayer()?.type == PlayerType.HUMAN
     
     var showContinueButton by remember { mutableStateOf(false) }
     
-    // 检测是否需要显示继续按钮
     LaunchedEffect(gameState.currentStage, gameState.winner) {
         if (gameState.currentStage == GameStage.SHOWDOWN || gameState.winner != null) {
             showContinueButton = true
@@ -44,7 +45,6 @@ fun GameScreen(
             .fillMaxSize()
             .background(Color(0xFF35654d))
     ) {
-        // 游戏结束显示
         if (gameState.isGameOver) {
             GameOverScreen(
                 winner = gameState.winner?.name ?: "",
@@ -57,256 +57,235 @@ fun GameScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // ===== 顶部：AI 玩家区域 =====
-            Box(
+            // ===== 顶部：返回按钮和回合信息 =====
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .background(Color(0xFF2a503d))
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 根据玩家数量动态布局
-                val aiPlayers = gameState.players.filter { it.type == com.poker.game.models.PlayerType.AI }
-                val playerCount = aiPlayers.size
-                
-                when {
-                    playerCount <= 2 -> {
-                        // 2人：左右各一个
-                        aiPlayers.forEachIndexed { index, player ->
-                            val align = if (index == 0) Alignment.TopStart else Alignment.TopEnd
-                            val offset = if (index == 0) 60.dp else 60.dp
-                            
-                            PlayerPanel(
-                                name = player.name,
-                                chips = player.chips,
-                                currentBet = player.currentBet,
-                                hand = player.hand,
-                                isActive = player.status == PlayerStatus.ACTIVE,
-                                isDealer = player.isDealer,
-                                isBigBlind = player.isBigBlind,
-                                isSmallBlind = player.isSmallBlind,
-                                isFolded = player.hasFolded(),
-                                isAllIn = player.isAllIn(),
-                                isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player),
-                                showCards = gameState.currentStage == GameStage.SHOWDOWN,
-                                playerIndex = player.id,
-                                modifier = Modifier
-                                    .align(align)
-                                    .padding(start = if (index == 0) offset else 0.dp, end = if (index == 1) offset else 0.dp, top = 16.dp)
-                            )
-                        }
-                    }
-                    playerCount <= 4 -> {
-                        // 3-4人：顶部一排
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                                .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            aiPlayers.forEach { player ->
-                                PlayerPanel(
-                                    name = player.name,
-                                    chips = player.chips,
-                                    currentBet = player.currentBet,
-                                    hand = player.hand,
-                                    isActive = player.status == PlayerStatus.ACTIVE,
-                                    isDealer = player.isDealer,
-                                    isBigBlind = player.isBigBlind,
-                                    isSmallBlind = player.isSmallBlind,
-                                    isFolded = player.hasFolded(),
-                                    isAllIn = player.isAllIn(),
-                                    isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player),
-                                    showCards = gameState.currentStage == GameStage.SHOWDOWN,
-                                    playerIndex = player.id
-                                )
-                            }
-                        }
-                    }
-                    else -> {
-                        // 5+人：顶部两排
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.TopCenter)
-                                .padding(horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                aiPlayers.take(4).forEach { player ->
-                                    PlayerPanel(
-                                        name = player.name,
-                                        chips = player.chips,
-                                        currentBet = player.currentBet,
-                                        hand = player.hand,
-                                        isActive = player.status == PlayerStatus.ACTIVE,
-                                        isDealer = player.isDealer,
-                                        isBigBlind = player.isBigBlind,
-                                        isSmallBlind = player.isSmallBlind,
-                                        isFolded = player.hasFolded(),
-                                        isAllIn = player.isAllIn(),
-                                        isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player),
-                                        showCards = gameState.currentStage == GameStage.SHOWDOWN,
-                                        playerIndex = player.id,
-                                        modifier = Modifier.padding(4.dp)
-                                    )
-                                }
-                            }
-                            if (aiPlayers.size > 4) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
-                                ) {
-                                    aiPlayers.drop(4).forEach { player ->
-                                        PlayerPanel(
-                                            name = player.name,
-                                            chips = player.chips,
-                                            currentBet = player.currentBet,
-                                            hand = player.hand,
-                                            isActive = player.status == PlayerStatus.ACTIVE,
-                                            isDealer = player.isDealer,
-                                            isBigBlind = player.isBigBlind,
-                                            isSmallBlind = player.isSmallBlind,
-                                            isFolded = player.hasFolded(),
-                                            isAllIn = player.isAllIn(),
-                                            isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player),
-                                            showCards = gameState.currentStage == GameStage.SHOWDOWN,
-                                            playerIndex = player.id,
-                                            modifier = Modifier.padding(4.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                Text(
+                    text = "← 返回",
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(8.dp)
+                )
+                Text(
+                    text = "第 ${gameState.gameRound} 手",
+                    color = Color.Yellow,
+                    fontSize = 14.sp
+                )
+            }
+            
+            // ===== AI 玩家 - 紧凑布局 =====
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                gameState.players.filter { it.type == PlayerType.AI }.forEach { player ->
+                    CompactPlayerPanel(
+                        player = player,
+                        isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player),
+                        showCards = gameState.currentStage == GameStage.SHOWDOWN
+                    )
                 }
             }
             
             // ===== 中间：公共牌和底池 =====
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // 底池
-                    PotDisplay(pot = gameState.pot)
-                    
-                    // 公共牌
-                    if (gameState.communityCards.isNotEmpty()) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            gameState.communityCards.forEach { card ->
-                                CardView(
-                                    card = card,
-                                    width = 60.dp,
-                                    height = 85.dp
-                                )
-                            }
+                PotDisplay(pot = gameState.pot)
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 公共牌
+                if (gameState.communityCards.isNotEmpty()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        gameState.communityCards.forEach { card ->
+                            CardView(card = card, width = 45.dp, height = 65.dp)
                         }
                     }
-                    
-                    // 游戏阶段
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 阶段
+                Text(
+                    text = when (gameState.currentStage) {
+                        GameStage.PREFLOP -> "翻牌前"
+                        GameStage.FLOP -> "翻牌"
+                        GameStage.TURN -> "转牌"
+                        GameStage.RIVER -> "河牌"
+                        GameStage.SHOWDOWN -> "摊牌"
+                    },
+                    color = Color(0xFFCCCCCC),
+                    fontSize = 14.sp
+                )
+                
+                // 消息
+                if (gameState.message.isNotEmpty()) {
                     Text(
-                        text = when (gameState.currentStage) {
-                            GameStage.PREFLOP -> "翻牌前"
-                            GameStage.FLOP -> "翻牌"
-                            GameStage.TURN -> "转牌"
-                            GameStage.RIVER -> "河牌"
-                            GameStage.SHOWDOWN -> "摊牌"
-                        },
-                        color = Color(0xFFCCCCCC),
-                        fontSize = 16.sp
+                        text = gameState.message,
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
-                    
-                    // 消息
-                    GameMessage(message = gameState.message)
-                    
-                    // 继续按钮
-                    if (showContinueButton && gameState.winner != null) {
-                        ActionButton(
-                            text = "继续",
-                            onClick = {
-                                showContinueButton = false
-                                controller.startNewHand()
-                            },
-                            backgroundColor = Color(0xFF28a745)
-                        )
-                    }
+                }
+                
+                // 继续按钮
+                if (showContinueButton && gameState.winner != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ActionButton(
+                        text = "继续下一局",
+                        onClick = {
+                            showContinueButton = false
+                            controller.startNewHand()
+                        },
+                        backgroundColor = Color(0xFF28a745)
+                    )
                 }
             }
             
-            // ===== 底部：人类玩家 =====
-            Box(
+            // ===== 底部：人类玩家 + 按钮 =====
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(16.dp),
-                contentAlignment = Alignment.BottomCenter
+                    .background(Color(0xFF2a503d))
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // 玩家手牌
-                    humanPlayer?.let { player ->
-                        PlayerPanel(
-                            name = player.name,
-                            chips = player.chips,
-                            currentBet = player.currentBet,
-                            hand = player.hand,
-                            isActive = player.status == PlayerStatus.ACTIVE,
-                            isDealer = player.isDealer,
-                            isBigBlind = player.isBigBlind,
-                            isSmallBlind = player.isSmallBlind,
-                            isFolded = player.hasFolded(),
-                            isAllIn = player.isAllIn(),
-                            isCurrentPlayer = isHumanTurn,
-                            showCards = true,
-                            playerIndex = 0
-                        )
+                // 玩家信息
+                humanPlayer?.let { player ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // 手牌
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            player.hand.forEach { card ->
+                                CardView(card = card, width = 40.dp, height = 56.dp)
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = "你",
+                                color = if (isHumanTurn) Color.Yellow else Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "$${player.chips}",
+                                color = Color.Green,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 动作按钮区域 - 保证显示
+                if (isHumanTurn && !showContinueButton) {
+                    val maxBet = gameState.players.filter { it.status == PlayerStatus.ACTIVE || it.status == PlayerStatus.ALL_IN }.maxOfOrNull { it.currentBet } ?: 0
+                    val toCall = maxBet - (humanPlayer?.currentBet ?: 0)
                     
-                    // 动作按钮
-                    if (isHumanTurn && !showContinueButton) {
-                        val currentBet = gameState.players
-                            .filter { it.status == PlayerStatus.ACTIVE }
-                            .maxOfOrNull { it.currentBet } ?: 0
-                        
-                        ActionButtonGroup(
-                            availableActions = controller.getAvailableActions(),
-                            onAction = { action ->
-                                if (action == PlayerAction.RAISE) {
-                                    // 简化处理：最小加注
-                                    controller.playerAction(action, gameState.minRaise)
-                                } else {
-                                    controller.playerAction(action)
-                                }
-                            },
-                            currentBet = currentBet - (humanPlayer?.currentBet ?: 0),
-                            playerChips = humanPlayer?.chips ?: 0
-                        )
-                    }
-                    
-                    // 返回菜单
-                    if (!isHumanTurn && !showContinueButton) {
-                        Text(
-                            text = "等待电脑行动...",
-                            color = Color(0xFFAAAAAA),
-                            fontSize = 14.sp
-                        )
-                    }
+                    ActionButtonGroup(
+                        availableActions = controller.getAvailableActions(),
+                        onAction = { action ->
+                            if (action == PlayerAction.RAISE) {
+                                controller.playerAction(action, gameState.minRaise)
+                            } else {
+                                controller.playerAction(action)
+                            }
+                        },
+                        currentBet = toCall,
+                        playerChips = humanPlayer?.chips ?: 0
+                    )
+                } else if (!showContinueButton) {
+                    Text(
+                        text = if (gameState.getCurrentPlayer()?.type == PlayerType.AI) "等待电脑行动..." else "游戏进行中",
+                        color = Color.Gray,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }
     }
+}
+
+/**
+ * 紧凑的玩家面板
+ */
+@Composable
+private fun CompactPlayerPanel(
+    player: com.poker.game.models.Player,
+    isCurrentPlayer: Boolean,
+    showCards: Boolean
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .background(
+                if (isCurrentPlayer) Color(0x40FFD700) else Color(0x60000000),
+                RoundedCornerShape(4.dp)
+            )
+            .padding(4.dp)
+    ) {
+        Row {
+            if (player.isDealer) Text("D ", color = Color.White, fontSize = 8.sp)
+            if (player.isSmallBlind) Text("SB ", color = Color.Cyan, fontSize = 8.sp)
+            if (player.isBigBlind) Text("BB ", color = Color.Yellow, fontSize = 8.sp)
+        }
+        Text(
+            text = player.name,
+            color = Color.White,
+            fontSize = 10.sp
+        )
+        Text(
+            text = "$${player.chips}",
+            color = Color.Green,
+            fontSize = 9.sp
+        )
+        if (player.currentBet > 0) {
+            Text(
+                text = "$${player.currentBet}",
+                color = Color.Yellow,
+                fontSize = 8.sp
+            )
+        }
+        // 隐藏的手牌
+        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            repeat(2) {
+                Box(
+                    modifier = Modifier
+                        .size(24.dp, 34.dp)
+                        .background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
+                )
+            }
+        }
+        if (player.status == com.poker.game.models.PlayerStatus.FOLDED) {
+            Text("弃牌", color = Color.Red, fontSize = 8.sp)
+        }
+    }
+}
+
+@Composable
+private fun Modifier.size(width: Int, height: Int): Modifier {
+    return this.then(Modifier.requiredSize(width.dp, height.dp))
+}
+
+private fun Modifier.requiredSize(width: Int, height: Int): Modifier {
+    return this.then(androidx.compose.foundation.layout.size(width.dp, height.dp))
 }
 
 /**
@@ -329,16 +308,14 @@ private fun GameOverScreen(
             Text(
                 text = "游戏结束",
                 color = Color.Yellow,
-                fontSize = 36.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
-            
             Text(
                 text = "🏆 $winner 获胜！",
                 color = Color.White,
-                fontSize = 28.sp
+                fontSize = 22.sp
             )
-            
             ActionButton(
                 text = "返回主菜单",
                 onClick = onRestart,
