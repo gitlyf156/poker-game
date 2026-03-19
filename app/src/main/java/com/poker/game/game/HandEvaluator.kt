@@ -21,9 +21,9 @@ enum class HandType(val rank: Int, val displayName: String) {
  */
 data class HandEvaluation(
     val handType: HandType,
-    val mainCards: List<Card>,           // 构成牌型的牌
-    val kickers: List<Card>,              // 踢脚牌
-    val value: Long                       // 用于比较的值
+    val mainCards: List<Card>,
+    val kickers: List<Card>,
+    val value: Long
 ) : Comparable<HandEvaluation> {
     override fun compareTo(other: HandEvaluation): Int {
         return when {
@@ -38,6 +38,24 @@ data class HandEvaluation(
  * 牌型评估器
  */
 object HandEvaluator {
+    
+    /**
+     * 获取所有k元素组合
+     */
+    private fun <T> List<T>.combinations(k: Int): List<List<T>> {
+        if (k == 0) return listOf(emptyList())
+        if (k >= size) return listOf(this)
+        
+        val result = mutableListOf<List<T>>()
+        for (i in indices) {
+            val elem = this[i]
+            val rest = drop(i + 1)
+            for (comb in rest.combinations(k - 1)) {
+                result.add(listOf(elem) + comb)
+            }
+        }
+        return result
+    }
     
     /**
      * 评估7张牌中最大的5张牌型
@@ -106,7 +124,9 @@ object HandEvaluator {
             }
             // 同花
             isFlush -> {
-                val value = cards.sumOf { it.rank.value * Math.pow(100.0, 4 - cards.indexOf(it)).toLong() }
+                val value = cards.mapIndexed { index, card -> 
+                    card.rank.value * Math.pow(100.0, (4 - index).toDouble()).toLong() 
+                }.sum()
                 HandEvaluation(HandType.FLUSH, cards, emptyList(), 600000000 + value)
             }
             // 顺子
@@ -147,7 +167,9 @@ object HandEvaluator {
             }
             // 高牌
             else -> {
-                val value = cards.sumOf { it.rank.value * Math.pow(100.0, 4 - cards.indexOf(it)).toLong() }
+                val value = cards.mapIndexed { index, card -> 
+                    card.rank.value * Math.pow(100.0, (4 - index).toDouble()).toLong() 
+                }.sum()
                 HandEvaluation(HandType.HIGH_CARD, cards, emptyList(), value)
             }
         }
