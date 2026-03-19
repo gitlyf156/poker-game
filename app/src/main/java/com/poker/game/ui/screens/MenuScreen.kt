@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -29,44 +32,49 @@ fun MenuScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF35654d)),
+            .background(Color(0xFF35654d))
+            .verticalScroll(rememberScrollState()),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(32.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            Spacer(modifier = Modifier.height(40.dp))
+            
             // 标题
             Text(
                 text = "♠️ 德州扑克 ♥️",
                 color = Color.White,
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
             )
             
             // 副标题
             Text(
                 text = "TEXAS HOLD'EM POKER",
                 color = Color(0xFFCCCCCC),
-                fontSize = 18.sp,
+                fontSize = 14.sp,
                 letterSpacing = 4.sp
             )
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             
             // 人数选择
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = "选择玩家人数",
                     color = Color.White,
-                    fontSize = 20.sp
+                    fontSize = 18.sp
                 )
                 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     (2..9).forEach { count ->
                         PlayerCountButton(
@@ -76,25 +84,36 @@ fun MenuScreen(
                         )
                     }
                 }
+                
+                Text(
+                    text = "当前: $selectedPlayers 人局",
+                    color = Color.Yellow,
+                    fontSize = 16.sp
+                )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             
-            // 开始按钮
+            // 开始按钮 - 大一点，更明显
             Box(
                 modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFF4a90d9))
                     .clickable { onStartGame(selectedPlayers) }
-                    .padding(horizontal = 64.dp, vertical = 16.dp)
+                    .padding(vertical = 20.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "开始游戏",
+                    text = "▶️ 开始游戏",
                     color = Color.White,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
+            
+            Spacer(modifier = Modifier.height(10.dp))
             
             // 退出按钮
             Box(
@@ -103,7 +122,7 @@ fun MenuScreen(
                     .background(Color.Transparent)
                     .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
                     .clickable { onExit() }
-                    .padding(horizontal = 32.dp, vertical = 8.dp)
+                    .padding(horizontal = 32.dp, vertical = 12.dp)
             ) {
                 Text(
                     text = "退出",
@@ -112,23 +131,30 @@ fun MenuScreen(
                 )
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             
             // 游戏信息
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "初始筹码: \$2000 | 盲注: \$50/\$100",
+                    text = "💰 初始筹码: \$2000",
                     color = Color(0xFFAAAAAA),
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "单人 vs 电脑对手",
+                    text = "🎯 盲注: \$50/\$100",
+                    color = Color(0xFFAAAAAA),
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "👤 你 vs 电脑对手",
                     color = Color(0xFFAAAAAA),
                     fontSize = 14.sp
                 )
             }
+            
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
@@ -144,7 +170,7 @@ private fun PlayerCountButton(
 ) {
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(44.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(if (isSelected) Color(0xFFffd700) else Color(0xFF2a503d))
             .border(
@@ -158,7 +184,7 @@ private fun PlayerCountButton(
         Text(
             text = "$count",
             color = if (isSelected) Color.Black else Color.White,
-            fontSize = 20.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold
         )
     }
