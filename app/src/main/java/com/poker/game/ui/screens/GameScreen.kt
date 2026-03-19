@@ -37,42 +37,39 @@ fun GameScreen(
         }
     }
     
-    Box(
+    // Portrait mode layout - vertical scrolling
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF35654d))
     ) {
-        if (gameState.isGameOver) {
-            GameOverScreen(
-                winner = gameState.winner?.name ?: "",
-                onRestart = onBackToMenu,
-                modifier = Modifier.fillMaxSize()
-            )
-            return@Box
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF2a503d))
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "Texas Poker", color = Color.Yellow, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Round ${gameState.gameRound}", color = Color.White, fontSize = 14.sp)
         }
         
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header
+        // Center - Pot and Community Cards
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // AI Players - horizontal scroll
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF2a503d))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "< Back", color = Color.Gray, fontSize = 14.sp)
-                Text(text = "Round ${gameState.gameRound}", color = Color.Yellow, fontSize = 14.sp)
-            }
-            
-            // AI Players - compact row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(4.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                gameState.players.filter { it.type == PlayerType.AI }.forEach { player ->
+                gameState.players.filter { it.type == PlayerType.AI }.take(3).forEach { player ->
                     CompactPlayerPanel(
                         player = player,
                         isCurrentPlayer = gameState.currentPlayerIndex == gameState.players.indexOf(player)
@@ -80,115 +77,119 @@ fun GameScreen(
                 }
             }
             
-            // Center - Pot and Cards
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                PotDisplay(pot = gameState.pot)
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                if (gameState.communityCards.isNotEmpty()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        gameState.communityCards.forEach { card ->
-                            CardView(card = card, width = 45.dp, height = 65.dp)
-                        }
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Pot
+            PotDisplay(pot = gameState.pot)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Community Cards
+            if (gameState.communityCards.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    gameState.communityCards.forEach { card ->
+                        CardView(card = card, width = 40.dp, height = 56.dp)
                     }
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = when (gameState.currentStage) {
-                        GameStage.PREFLOP -> "Pre-flop"
-                        GameStage.FLOP -> "Flop"
-                        GameStage.TURN -> "Turn"
-                        GameStage.RIVER -> "River"
-                        GameStage.SHOWDOWN -> "Showdown"
-                    },
-                    color = Color(0xFFCCCCCC),
-                    fontSize = 14.sp
-                )
-                
-                if (gameState.message.isNotEmpty()) {
-                    Text(
-                        text = gameState.message,
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                }
-                
-                if (showContinueButton && gameState.winner != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    ActionButton(
-                        text = "Continue",
-                        onClick = {
-                            showContinueButton = false
-                            controller.startNewHand()
-                        },
-                        backgroundColor = Color(0xFF28a745)
-                    )
                 }
             }
             
-            // Bottom - Human Player + Buttons
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF2a503d))
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                humanPlayer?.let { player ->
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            player.hand.forEach { card ->
-                                CardView(card = card, width = 40.dp, height = 56.dp)
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = "You",
-                                color = if (isHumanTurn) Color.Yellow else Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(text = "$${player.chips}", color = Color.Green, fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Stage
+            Text(
+                text = when (gameState.currentStage) {
+                    GameStage.PREFLOP -> "Pre-flop"
+                    GameStage.FLOP -> "Flop"
+                    GameStage.TURN -> "Turn"
+                    GameStage.RIVER -> "River"
+                    GameStage.SHOWDOWN -> "Showdown"
+                },
+                color = Color(0xFFCCCCCC),
+                fontSize = 14.sp
+            )
+            
+            // Message
+            if (gameState.message.isNotEmpty()) {
+                Text(
+                    text = gameState.message,
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+            
+            // Continue button
+            if (showContinueButton && gameState.winner != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                ActionButton(
+                    text = "Next Hand",
+                    onClick = {
+                        showContinueButton = false
+                        controller.startNewHand()
+                    },
+                    backgroundColor = Color(0xFF28a745)
+                )
+            }
+        }
+        
+        // Bottom - Human Player + Buttons
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF2a503d))
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Human player info
+            humanPlayer?.let { player ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Cards
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        player.hand.forEach { card ->
+                            CardView(card = card, width = 45.dp, height = 65.dp)
                         }
                     }
+                    Column {
+                        Text(
+                            text = "You",
+                            color = if (isHumanTurn) Color.Yellow else Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(text = "$${player.chips}", color = Color.Green, fontSize = 16.sp)
+                    }
                 }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Action buttons - big and easy to tap
+            if (isHumanTurn && !showContinueButton) {
+                val maxBet = gameState.players.filter { it.status == PlayerStatus.ACTIVE || it.status == PlayerStatus.ALL_IN }.maxOfOrNull { it.currentBet } ?: 0
+                val toCall = maxBet - (humanPlayer?.currentBet ?: 0)
                 
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Action buttons
-                if (isHumanTurn && !showContinueButton) {
-                    val maxBet = gameState.players.filter { it.status == PlayerStatus.ACTIVE || it.status == PlayerStatus.ALL_IN }.maxOfOrNull { it.currentBet } ?: 0
-                    val toCall = maxBet - (humanPlayer?.currentBet ?: 0)
-                    
-                    ActionButtonGroup(
-                        availableActions = controller.getAvailableActions(),
-                        onAction = { action ->
-                            if (action == PlayerAction.RAISE) {
-                                controller.playerAction(action, gameState.minRaise)
-                            } else {
-                                controller.playerAction(action)
-                            }
-                        },
-                        currentBet = toCall,
-                        playerChips = humanPlayer?.chips ?: 0
-                    )
-                } else if (!showContinueButton) {
-                    Text(
-                        text = if (gameState.getCurrentPlayer()?.type == PlayerType.AI) "Waiting for AI..." else "Game in progress",
-                        color = Color.Gray,
-                        fontSize = 12.sp
-                    )
-                }
+                ActionButtonGroup(
+                    availableActions = controller.getAvailableActions(),
+                    onAction = { action ->
+                        if (action == PlayerAction.RAISE) {
+                            controller.playerAction(action, gameState.minRaise)
+                        } else {
+                            controller.playerAction(action)
+                        }
+                    },
+                    currentBet = toCall,
+                    playerChips = humanPlayer?.chips ?: 0
+                )
+            } else if (!showContinueButton) {
+                Text(
+                    text = "Waiting...",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
             }
         }
     }
@@ -222,7 +223,9 @@ private fun CompactPlayerPanel(
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             repeat(2) {
                 Box(
-                    modifier = Modifier.size(24.dp, 34.dp).background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
+                    modifier = Modifier
+                        .size(20.dp, 28.dp)
+                        .background(Color(0xFF1a4785), RoundedCornerShape(2.dp))
                 )
             }
         }
@@ -233,22 +236,10 @@ private fun CompactPlayerPanel(
 }
 
 @Composable
-private fun GameOverScreen(
-    winner: String,
-    onRestart: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.background(Color(0xDD000000)),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            Text(text = "Game Over", color = Color.Yellow, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-            Text(text = "Winner: $winner", color = Color.White, fontSize = 22.sp)
-            ActionButton(text = "Back to Menu", onClick = onRestart, backgroundColor = Color(0xFF4a90d9))
-        }
-    }
+private fun Modifier.size(width: Int, height: Int): Modifier {
+    return this.then(Modifier.requiredSize(width.dp, height.dp))
+}
+
+private fun Modifier.requiredSize(width: Int, height: Int): Modifier {
+    return this.then(androidx.compose.foundation.layout.size(width.dp, height.dp))
 }
